@@ -1,7 +1,9 @@
 package com.users.user_service.security.models;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.users.user_service.models.Role;
 import com.users.user_service.models.User;
+import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -9,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@JsonDeserialize
+@NoArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
     String username;
