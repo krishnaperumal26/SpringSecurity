@@ -1,5 +1,8 @@
 package com.users.user_service.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.users.user_service.dtos.SendEmailDto;
 import com.users.user_service.models.Token;
 import com.users.user_service.models.User;
 import com.users.user_service.repositories.TokenRepository;
@@ -7,6 +10,7 @@ import com.users.user_service.repositories.UserRepository;
 import jakarta.transaction.Transactional;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,24 +24,41 @@ public class UserServiceImpl implements IUserService {
     UserRepository userRepository;
     BCryptPasswordEncoder bCryptPasswordEncoder;
     TokenRepository tokenRepository;
+    KafkaTemplate<String, String> kafkaTemplate;
+    ObjectMapper objectMapper;
 
     UserServiceImpl(UserRepository UserRepository,
                     BCryptPasswordEncoder bCryptPasswordEncoder,
-                    TokenRepository tokenRepository
-    ) {
+                    TokenRepository tokenRepository,
+                    KafkaTemplate<String, String> kafkaTemplate,
+                    ObjectMapper objectMapper) {
         this.userRepository = UserRepository;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.tokenRepository = tokenRepository;
-
+        this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Override
-    public User singUp(String name, String email, String password) {
+    public User signUp(String name, String email, String password) {
        User user = new User();
        user.setName(name);
        user.setEmail(email);
        user.setPassword(bCryptPasswordEncoder.encode(password));
-       return userRepository.save(user);
+
+       SendEmailDto sendEmailDto = new SendEmailDto();
+       sendEmailDto.setFrom("contact@nanaltech.com");
+       sendEmailDto.setTo(email);
+       sendEmailDto.setSubject("User Registration");
+       sendEmailDto.setBody("Welcome, " + name + ". Your account has been created successfully.");
+       String sendEmailDtoString;
+        try {
+            sendEmailDtoString =objectMapper.writeValueAsString(sendEmailDto);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        kafkaTemplate.send("sendEmail", sendEmailDtoString);
+        return userRepository.save(user);
     }
 
     @Override

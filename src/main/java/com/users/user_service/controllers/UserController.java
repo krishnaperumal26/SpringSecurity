@@ -20,7 +20,7 @@ public class UserController {
     @PostMapping("/register")
     public UserDto signUp(@RequestBody SignUpRequestDto requestDto)
     {
-        User user = userService.singUp(requestDto.getName(),
+        User user = userService.signUp(requestDto.getName(),
                 requestDto.getEmail(),
                 requestDto.getPassword());
         return UserDto.from(user);

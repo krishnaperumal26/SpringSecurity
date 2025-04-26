@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 public interface IUserService {
 
-    User singUp(String name, String email, String password);
+    User signUp(String name, String email, String password);
     Token login(String email, String password);
     void logout(String token);
     User validateToken(String token);
